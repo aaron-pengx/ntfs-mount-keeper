@@ -1,0 +1,48 @@
+name: build
+
+on:
+  push:
+    branches: [main]
+    tags: ["v*"]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Check the Python backend parses
+        run: python3 -m py_compile main.py
+
+      - name: Build the frontend
+        run: |
+          npm ci
+          npm run build
+
+      - name: Assemble the installable plugin folder
+        run: |
+          mkdir -p out/ntfs-mount-keeper/dist
+          cp plugin.json package.json main.py LICENSE README.md out/ntfs-mount-keeper/
+          cp dist/index.js out/ntfs-mount-keeper/dist/
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ntfs-mount-keeper
+          path: out/
+
+      - name: Attach a zip to the release
+        if: startsWith(github.ref, 'refs/tags/v')
+        run: |
+          cd out && zip -r ../ntfs-mount-keeper.zip ntfs-mount-keeper
+
+      - uses: softprops/action-gh-release@v2
+        if: startsWith(github.ref, 'refs/tags/v')
+        with:
+          files: ntfs-mount-keeper.zip

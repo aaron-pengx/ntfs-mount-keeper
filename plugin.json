@@ -1,0 +1,11 @@
+{
+  "name": "NTFS Mount Keeper",
+  "author": "PENGXIANG",
+  "flags": ["root"],
+  "api_version": 1,
+  "publish": {
+    "tags": ["storage", "utility", "system"],
+    "description": "Keeps an NTFS volume (e.g. the Windows partition) mounted on boot by re-applying the /etc/fstab entry and the udisks2 polkit rule after every SteamOS update.",
+    "image": ""
+  }
+}

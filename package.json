@@ -1,0 +1,22 @@
+{
+  "name": "ntfs-mount-keeper",
+  "version": "1.0.0",
+  "description": "Re-applies the NTFS fstab entry and udisks2 polkit rule after SteamOS updates wipe them.",
+  "type": "module",
+  "scripts": {
+    "build": "shx rm -rf dist && rollup -c",
+    "watch": "rollup -c -w"
+  },
+  "devDependencies": {
+    "@decky/api": "^1.1.2",
+    "@decky/rollup": "^1.0.1",
+    "@decky/ui": "^4.7.2",
+    "@types/react": "^18.3.12",
+    "@types/react-dom": "^18.3.1",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "react-icons": "^5.3.0",
+    "shx": "^0.3.4",
+    "typescript": "^5.6.0"
+  }
+}
