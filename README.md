@@ -139,16 +139,35 @@ sudo cp -r /home/deck/ntfs-mount-keeper /home/deck/homebrew/plugins/ && sudo cho
 - 首次应用（或改动 fstab 后）建议重启一次 Steam Deck，确认开机自动挂载生效。
 - 插件写入 fstab 前，会剥掉自己上次写的那一段（以注释行 `# managed by ntfs-mount-keeper ...` 标识），**并吸收掉任何指向同一挂载点或同一卷标的手工条目**。同一个挂载点存在两条记录会让 systemd 生成两个互相打架的 mount unit，所以手工加过的行会被合并而不是并存。系统自己的条目不受影响 —— 写入前的校验已经排除了系统目录作为挂载点的可能。
 
-## 实测环境
-
-在下列环境上完整验证过（2026-08）：
+## 实测环境与验证状态
 
 | 项 | 值 |
 |---|---|
 | 设备 | Steam Deck，2TB NVMe（双系统，Windows 11 + SteamOS） |
 | polkit | 126（`rules.d` 的 JS 规则引擎需要 ≥ 0.106） |
-| NTFS 驱动 | ntfs-3g（`findmnt` 显示为 `fuseblk`） |
+| NTFS 驱动 | ntfs-3g 2022.10.3（`findmnt` 显示为 `fuseblk`） |
 | 目标卷 | 1.7T NTFS，与 Windows 共享，含 Steam 库 |
+
+跨越 2026-08 的三次 SteamOS 更新验证：
+
+- **自愈已实测触发。** 2026-08-09 的更新清空了 fstab 条目、polkit 规则以及挂载点目录，插件在加载时一次补齐并完成挂载：
+
+  ```
+  boot-time apply: {'ok': True, 'steps': ['created /run/media/deck/SSD',
+    'restored the /etc/fstab entry', 'restored the udisks2 polkit rule',
+    'mounted SSD'], 'errors': []}
+  ```
+
+  链路是自洽的：fstab 条目没了，systemd 开机时无从挂载，`/run` 又是 tmpfs 所以挂载点目录同样不存在，四个步骤依次补回。
+
+- **并非每次更新都会覆盖 `/etc`。** 同期另外几次更新后 `steps` 均为空 —— 配置还在，插件检查完就收手，不做任何写入。幂等按预期工作。
+
+- 配置未被破坏时，开机由 fstab 挂载 —— `systemctl status run-media-deck-SSD.mount` 显示 `loaded (/etc/fstab; generated)`，journal 里 ntfs-3g 收到的是 `rw,uid=1000,gid=1000,umask=000`
+- 卷上文件属主为 `deck`、权限 0777，执行位完整保留
+- 写入去重、危险挂载点拒绝、`nofail` 强制补回、写入后回滚，均以真实 `fstab` 文件测试过
+- Decky Loader 本体在这几次更新中均存活。若某次它没能挺过来，`main.py --apply` 这条不依赖 Decky 的路径仍然可用。
+
+> 判据提示：`findmnt` 输出里的 `user_id=`/`group_id=` 是 FUSE 记录的**挂载执行者身份**，udisks2 和 systemd 都以 root 执行，因此该字段无法区分卷是被谁挂上的。要判断是否由 fstab 挂载，看 mount unit 的 `Loaded:` 行。
 
 ## 已知限制
 
