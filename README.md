@@ -84,7 +84,29 @@ npm install && npm run build
 
 产物是 `dist/index.js`。
 
-## 安装到 Steam Deck
+## 安装
+
+需要先装好 [Decky Loader](https://decky.xyz/)。
+
+### 一键安装
+
+在 Steam Deck 桌面模式的 konsole 里执行：
+
+```bash
+curl -sL https://raw.githubusercontent.com/aaron-pengx/ntfs-mount-keeper/main/install.sh | sudo bash
+```
+
+脚本从 Releases 拉取最新版本，解压到插件目录，修正属主与权限，重启 Decky。已安装时原地升级，**配置不受影响** —— 卷标、挂载点、挂载选项存在插件目录之外的 settings 目录里。
+
+卸载（先让插件撤销 fstab 条目和 polkit 规则，再删除文件）：
+
+```bash
+curl -sL https://raw.githubusercontent.com/aaron-pengx/ntfs-mount-keeper/main/install.sh | sudo bash -s -- --uninstall
+```
+
+介意 `curl | bash` 的话，脚本就在仓库根目录，[install.sh](install.sh) 一百来行，可以先看完再跑。
+
+### 手动安装
 
 把下列文件按原结构拷到 `/home/deck/homebrew/plugins/ntfs-mount-keeper/`：
 
